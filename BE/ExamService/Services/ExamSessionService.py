@@ -1,6 +1,5 @@
 """
 ExamSessionService - Khởi tạo và quản lý phiên thi
-Tương ứng với proto message: StartExamRequest, ExamSessionResponse
 """
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -21,7 +20,7 @@ class ExamSessionService:
             scenario = await self.scenario_repo.find_by_id(scenario_id)
             
             
-            start_time = datetime.utcnow()
+            start_time = datetime.now()
             duration_seconds = self.station_repo.get_time(scenario_id)
             end_time = start_time + timedelta(seconds=duration_seconds)
             

@@ -26,6 +26,7 @@ if _version_not_supported:
 
 
 class ExamServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -34,53 +35,41 @@ class ExamServiceStub(object):
             channel: A grpc.Channel.
         """
         self.StartExamSession = channel.unary_unary(
-                '/exam_service.ExamService/StartExamSession',
+                '/exam_service_proto.ExamService/StartExamSession',
                 request_serializer=exam__service__pb2.StartExamRequest.SerializeToString,
                 response_deserializer=exam__service__pb2.ExamSessionResponse.FromString,
                 _registered_method=True)
-        self.ReceiveTranscript = channel.unary_unary(
-                '/exam_service.ExamService/ReceiveTranscript',
-                request_serializer=exam__service__pb2.TranscriptRequest.SerializeToString,
-                response_deserializer=exam__service__pb2.StandardResponse.FromString,
-                _registered_method=True)
         self.SubmitAnswer = channel.unary_unary(
-                '/exam_service.ExamService/SubmitAnswer',
+                '/exam_service_proto.ExamService/SubmitAnswer',
                 request_serializer=exam__service__pb2.AnswerRequest.SerializeToString,
                 response_deserializer=exam__service__pb2.StandardResponse.FromString,
                 _registered_method=True)
         self.GetCurrentState = channel.unary_unary(
-                '/exam_service.ExamService/GetCurrentState',
+                '/exam_service_proto.ExamService/GetCurrentState',
                 request_serializer=exam__service__pb2.SessionIdRequest.SerializeToString,
                 response_deserializer=exam__service__pb2.ExamStateResponse.FromString,
                 _registered_method=True)
 
 
 class ExamServiceServicer(object):
-    
-    def StartExamSession(self, request, context):
-        """1. Khởi tạo một phiên thi mới (Khi sinh viên bấm "Bắt đầu")
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+    """Missing associated documentation comment in .proto file."""
 
-    def ReceiveTranscript(self, request, context):
-        """2. Nhận kết quả Text từ Media Service (S2T) hoặc Coordinator gửi sang
-        Dùng cho realtime: Student nói -> Text -> Exam Service xử lý
+    def StartExamSession(self, request, context):
+        """1. Khởi tạo một phiên thi mới 
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SubmitAnswer(self, request, context):
-        """3. Nộp câu trả lời (dạng trắc nghiệm hoặc text nhập tay)
+        """2. Nộp câu trả lời 
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetCurrentState(self, request, context):
-        """4. Lấy trạng thái hiện tại (để check thời gian, trạm hiện tại)
+        """3. Lấy trạng thái hiện tại 
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -94,11 +83,6 @@ def add_ExamServiceServicer_to_server(servicer, server):
                     request_deserializer=exam__service__pb2.StartExamRequest.FromString,
                     response_serializer=exam__service__pb2.ExamSessionResponse.SerializeToString,
             ),
-            'ReceiveTranscript': grpc.unary_unary_rpc_method_handler(
-                    servicer.ReceiveTranscript,
-                    request_deserializer=exam__service__pb2.TranscriptRequest.FromString,
-                    response_serializer=exam__service__pb2.StandardResponse.SerializeToString,
-            ),
             'SubmitAnswer': grpc.unary_unary_rpc_method_handler(
                     servicer.SubmitAnswer,
                     request_deserializer=exam__service__pb2.AnswerRequest.FromString,
@@ -111,14 +95,14 @@ def add_ExamServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'exam_service.ExamService', rpc_method_handlers)
+            'exam_service_proto.ExamService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('exam_service.ExamService', rpc_method_handlers)
+    server.add_registered_method_handlers('exam_service_proto.ExamService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
 class ExamService(object):
-    
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def StartExamSession(request,
@@ -134,36 +118,9 @@ class ExamService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/exam_service.ExamService/StartExamSession',
+            '/exam_service_proto.ExamService/StartExamSession',
             exam__service__pb2.StartExamRequest.SerializeToString,
             exam__service__pb2.ExamSessionResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ReceiveTranscript(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/exam_service.ExamService/ReceiveTranscript',
-            exam__service__pb2.TranscriptRequest.SerializeToString,
-            exam__service__pb2.StandardResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -188,7 +145,7 @@ class ExamService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/exam_service.ExamService/SubmitAnswer',
+            '/exam_service_proto.ExamService/SubmitAnswer',
             exam__service__pb2.AnswerRequest.SerializeToString,
             exam__service__pb2.StandardResponse.FromString,
             options,
@@ -215,7 +172,7 @@ class ExamService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/exam_service.ExamService/GetCurrentState',
+            '/exam_service_proto.ExamService/GetCurrentState',
             exam__service__pb2.SessionIdRequest.SerializeToString,
             exam__service__pb2.ExamStateResponse.FromString,
             options,

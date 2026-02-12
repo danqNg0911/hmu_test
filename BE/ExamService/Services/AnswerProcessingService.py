@@ -1,6 +1,5 @@
 """
 AnswerProcessingService - Xử lý nộp câu trả lời
-Tương ứng với proto message: AnswerRequest, StandardResponse
 """
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -11,7 +10,6 @@ from BE.ExamService.Models.PyObjectId import PyObjectId
 
 
 class AnswerProcessingService:
-    """Service xử lý nộp đáp án từ AnswerRequest"""
     
     def __init__(self):
         self.answer_repo = UserAnswerRepository()
@@ -46,7 +44,8 @@ class AnswerProcessingService:
                 'message': f'Lỗi khi nộp đáp án: {str(e)}'
             }
     
-    #async def get_session_answers(self, session_id: str) -> List[UserAnswer]:
-        
-    #async def validate_answer(self, answer_data: str, question_type: str) -> bool:
-        
+    async def get_session_answers(self, session_id: str) -> List[UserAnswer]:
+        pass
+
+    async def validate_answer(self, answer_data: str, question_type: str) -> bool:
+        pass      

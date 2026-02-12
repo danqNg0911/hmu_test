@@ -26,8 +26,8 @@ class ExamServiceHandler(exam_service_pb2_grpc.ExamServiceServicer):
         )
         return exam_service_pb2.SubmitAnswerResponse(**response_data)
     
-    async def GetExamState(self, request, context):
-        response_data = await self.exam_state_service.get_exam_state(
+    async def GetCurrentState(self, request, context):
+        response_data = await self.exam_state_service.get_current_state(
             session_id=request.session_id
         )
-        return exam_service_pb2.GetExamStateResponse(**response_data)
+        return exam_service_pb2.GetCurrentStateResponse(**response_data)

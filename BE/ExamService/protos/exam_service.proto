@@ -1,56 +1,45 @@
 syntax = "proto3";
 
-package exam_service;
+package exam_service_proto;
 
 service ExamService {
     
-    // 1. Khởi tạo một phiên thi mới (Khi sinh viên bấm "Bắt đầu")
+    // 1. Khởi tạo một phiên thi mới 
     rpc StartExamSession (StartExamRequest) returns (ExamSessionResponse);
 
-    // 2. Nhận kết quả Text từ Media Service (S2T) hoặc Coordinator gửi sang
-    // Dùng cho realtime: Student nói -> Text -> Exam Service xử lý
-    rpc ReceiveTranscript (TranscriptRequest) returns (StandardResponse);
-
-    // 3. Nộp câu trả lời (dạng trắc nghiệm hoặc text nhập tay)
+    // 2. Nộp câu trả lời 
     rpc SubmitAnswer (AnswerRequest) returns (StandardResponse);
 
-    // 4. Lấy trạng thái hiện tại (để check thời gian, trạm hiện tại)
+    // 3. Lấy trạng thái hiện tại 
     rpc GetCurrentState (SessionIdRequest) returns (ExamStateResponse);
 }
 
 // Request khi bắt đầu thi
 message StartExamRequest {
-    string student_id = 1;      // ID sinh viên
-    string exam_script_id = 2;  // ID đề thi/kịch bản
+    string student_id = 1;      
+    string exam_script_id = 2;  
 }
 
 // Response trả về thông tin phiên thi
 message ExamSessionResponse {
     string session_id = 1;
-    string status = 2;          // "READY", "IN_PROGRESS"
-    int64 start_timestamp = 3;  // Thời gian bắt đầu (Unix timestamp)
-    int32 duration_seconds = 4; // Tổng thời gian làm bài (giây)
-}
-
-// Request chứa nội dung hội thoại (sau khi đã convert Speech to Text)
-message TranscriptRequest {
-    string session_id = 1;
-    string text_content = 2;    // Nội dung sinh viên nói
-    bool is_final = 3;          // True nếu câu nói đã kết thúc, False nếu đang stream
+    string status = 2;          
+    int64 start_timestamp = 3;  
+    int32 duration_seconds = 4; 
 }
 
 // Request nộp đáp án
 message AnswerRequest {
     string session_id = 1;
-    string station_id = 2;      // Trạm nào
-    string question_id = 3;     // Câu hỏi nào
-    string answer_data = 4;     // Đáp án (A, B, C hoặc text)
+    string station_id = 2;
+    string question_id = 3;
+    string answer_data = 4;
 }
 
 // Response chuẩn (dùng chung cho các hàm chỉ cần báo Thành công/Thất bại)
 message StandardResponse {
     bool success = 1;
-    string message = 2;         // Thông báo lỗi nếu có
+    string message = 2;         
 }
 
 // Request chỉ chứa ID
@@ -61,6 +50,6 @@ message SessionIdRequest {
 // Response trạng thái realtime
 message ExamStateResponse {
     string status = 1;              // "IN_PROGRESS", "TIMEOUT"
-    int32 remaining_seconds = 2;    // Thời gian còn lại
-    int32 current_station_index = 3;// Đang ở trạm số mấy
+    int32 remaining_seconds = 2;    
+    int32 current_station_index = 3;
 }
