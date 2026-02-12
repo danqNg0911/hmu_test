@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package exam_service_proto;
+
+service ExamService {
+    
+    // 1. Khởi tạo một phiên thi mới 
+    rpc StartExamSession (StartExamRequest) returns (ExamSessionResponse);
+
+    // 2. Nộp câu trả lời 
+    rpc SubmitAnswer (AnswerRequest) returns (StandardResponse);
+
+    // 3. Lấy trạng thái hiện tại 
+    rpc GetCurrentState (SessionIdRequest) returns (ExamStateResponse);
+}
+
+// Request khi bắt đầu thi
+message StartExamRequest {
+    string student_id = 1;      
+    string exam_script_id = 2;  
+}
+
+// Response trả về thông tin phiên thi
+message ExamSessionResponse {
+    string session_id = 1;
+    string status = 2;          
+    int64 start_timestamp = 3;  
+    int32 duration_seconds = 4; 
+}
+
+// Request nộp đáp án
+message AnswerRequest {
+    string session_id = 1;
+    string station_id = 2;
+    string question_id = 3;
+    string answer_data = 4;
+}
+
+// Response chuẩn (dùng chung cho các hàm chỉ cần báo Thành công/Thất bại)
+message StandardResponse {
+    bool success = 1;
+    string message = 2;         
+}
+
+// Request chỉ chứa ID
+message SessionIdRequest {
+    string session_id = 1;
+}
+
+// Response trạng thái realtime
+message ExamStateResponse {
+    string status = 1;              // "IN_PROGRESS", "TIMEOUT"
+    int32 remaining_seconds = 2;    
+    int32 current_station_index = 3;
+}
