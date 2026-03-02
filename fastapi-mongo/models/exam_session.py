@@ -1,13 +1,13 @@
 from beanie import Document, PydanticObjectId
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 class ExamSession(Document):
     user_id: PydanticObjectId
-    stations: List[PydanticObjectId]
+    stations: Optional[List[PydanticObjectId]] = None
     status: str
-    current_station: int
-    expected_time: datetime
+    current_station: Optional[int] = None
+    expected_time: Optional[datetime] = None
 
     class Settings:
         name = "Exam_sessions"

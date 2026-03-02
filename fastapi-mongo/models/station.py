@@ -1,6 +1,6 @@
 from beanie import Document
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Optional
 
 class Rubric(BaseModel):
     description: str
@@ -8,8 +8,8 @@ class Rubric(BaseModel):
 
 class Question(BaseModel):
     question_content: str
-    expected_ans: str
-    rubric: List[Rubric]
+    expected_ans: Optional[str] = None
+    rubrics: List[Rubric]
 
 class PresentedFinding(BaseModel):
     section_id: str
@@ -19,7 +19,7 @@ class PresentedFinding(BaseModel):
 
 class Station(Document):
     type: str
-    presented_findings: List[PresentedFinding]
+    presented_findings: Optional[List[PresentedFinding]] = None
     questions: List[Question]
     time: int
 

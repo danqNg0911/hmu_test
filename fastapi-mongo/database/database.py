@@ -83,3 +83,8 @@ async def retrieve_chat_history(user_id: str, agent_id: str) -> List[Message]:
         }
     ).sort("+timestamp").to_list()
     return messages
+
+# ================= EXAM SESSION =================
+
+async def add_exam_session(new_session: ExamSession) -> ExamSession:
+    return await new_session.create()

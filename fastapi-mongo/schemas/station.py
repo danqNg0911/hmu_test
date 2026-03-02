@@ -8,8 +8,8 @@ class RubricSchema(BaseModel):
 
 class QuestionSchema(BaseModel):
     question_content: str
-    expected_ans: str
-    rubric: List[RubricSchema]
+    expected_ans: Optional[str] = None
+    rubrics: List[RubricSchema]
 
 class PresentedFindingSchema(BaseModel):
     section_id: str
@@ -19,7 +19,7 @@ class PresentedFindingSchema(BaseModel):
 
 class StationCreate(BaseModel):
     type: str
-    presented_findings: List[PresentedFindingSchema]
+    presented_findings: Optional[List[PresentedFindingSchema]] = None
     questions: List[QuestionSchema]
     time: int
 

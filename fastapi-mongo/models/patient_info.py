@@ -1,6 +1,6 @@
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class PatientInfo(Document):
     version: str
@@ -10,8 +10,8 @@ class PatientInfo(Document):
     avt_url: str
     voice_id: str
     description: str
-    stationIds: List[PydanticObjectId]  # Kiểu dữ liệu chuẩn của Beanie cho ObjectId
+    stationIds: Optional[List[PydanticObjectId]] = None
 
     class Settings:
-        name = "patient_info"
+        name = "Patient_infos"
 
