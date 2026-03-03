@@ -1,10 +1,11 @@
-from typing import List, Union
+from typing import List, Union, Optional
 from beanie import PydanticObjectId
 
 from models.user import User
 from models.station import Station
 from models.patient_info import PatientInfo
 from models.exam_session import ExamSession
+from models.exam_station import ExamStation
 from models.message import Message
 
 # ================= USER =================
@@ -28,6 +29,12 @@ async def retrieve_stations() -> List[Station]:
 
 async def retrieve_station(id: PydanticObjectId) -> Union[Station, None]:
     return await Station.get(id)
+
+async def get_random_station(limit: int) -> List[dict]:
+    return await Station.aggregate([
+        {"$sample": {"size": limit}}
+    ]).to_list()
+
 
 
 # ================= PATIENT INFO =================
@@ -66,6 +73,34 @@ async def update_exam_session_data(id: PydanticObjectId, data: dict) -> Union[bo
         await session.update(update_query)
         return session
     return False
+
+# ================= EXAM STATION =================
+async def create_exam_stations(stations: List[ExamStation]) -> int:
+    await ExamStation.insert_many(stations)
+    return len(stations)
+
+async def retrieve_exam_station(session_id: PydanticObjectId, station_number: int) -> Optional[ExamStation]:
+    return await ExamStation.find_one(
+        ExamStation.session_id == session_id,
+        ExamStation.station_number == station_number
+    )
+
+async def get_exam_station_by_id(station_id: PydanticObjectId) -> Optional[ExamStation]:
+    return await ExamStation.get(station_id)
+
+async def update_exam_station(session_id: PydanticObjectId, station_number: int, update_data: dict) -> Optional[ExamStation]:
+    exam_station = await ExamStation.find_one(
+        ExamStation.session_id == session_id,
+        ExamStation.station_number == station_number
+    )
+
+    if not exam_station:
+        return None
+    
+    data = {k: v for k, v in update_data.items() if v is not None}
+
+    await exam_station.update({"$set": data})
+    return exam_station
 
 
 # ================= MESSAGE =================

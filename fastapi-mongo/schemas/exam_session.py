@@ -3,7 +3,7 @@ from typing import List, Optional
 from beanie import PydanticObjectId
 
 class ExamSessionCreate(BaseModel):
-    user_id: str
+    user_id: PydanticObjectId
     stations: Optional[List[PydanticObjectId]] = None
     expected_time: Optional[str] = None
     status: str = "IN_PROGRESS"
@@ -15,3 +15,7 @@ class ExamSessionUpdate(BaseModel):
 
 class ExamSessionResponse(ExamSessionCreate):
     id: PydanticObjectId
+
+class ExamSessionStartResponse(BaseModel):
+    id: PydanticObjectId
+    current_station: int

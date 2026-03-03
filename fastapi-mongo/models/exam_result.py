@@ -1,5 +1,5 @@
 from beanie import Document, PydanticObjectId
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class ExamResult(Document):
     user_id: PydanticObjectId 
     start_at: datetime
     end_at: datetime
-    station_results: List[StationResult]
+    station_results: Optional[List[StationResult]] = None
     overall_feedback: str
 
     class Settings:

@@ -8,7 +8,7 @@ import models as models
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env.dev", extra="ignore")
+    model_config = ConfigDict(env_file=".env", extra="ignore")
     
     DATABASE_URL: Optional[str] = None
 
@@ -24,5 +24,6 @@ class Settings(BaseSettings):
 async def initiate_database():
     client = AsyncIOMotorClient(Settings().DATABASE_URL)
     await init_beanie(
-        database=client.get_default_database(), document_models=models.__all__
+       #database=client.get_default_database(), document_models=models.__all__
+       database=client["HMU-test"], document_models=models.__all__
     )

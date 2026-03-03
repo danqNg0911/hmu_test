@@ -7,7 +7,8 @@ class ExamSession(Document):
     stations: Optional[List[PydanticObjectId]] = None
     status: str
     current_station: Optional[int] = None
-    expected_time: Optional[datetime] = None
+
+    #expected_time: Optional[datetime] = None
 
     class Settings:
         name = "Exam_sessions"
