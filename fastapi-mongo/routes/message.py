@@ -16,5 +16,5 @@ async def send_message(msg_data: MessageCreate = Body(...)):
 
 @router.get("/history/{user_id}/{agent_id}", response_model=List[MessageResponse])
 async def get_chat_history(user_id: str, agent_id: str):
-    messages = await retrieve_chat_history(user_id, agent_id).sort("+timestamp").to_list()
+    messages = await retrieve_chat_history(user_id, agent_id)
     return messages

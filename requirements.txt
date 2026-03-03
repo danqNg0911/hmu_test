@@ -7,3 +7,5 @@ minio
 uuid
 grpcio
 grpcio-tools
+websockets
+beanie

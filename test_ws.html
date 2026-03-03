@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WebSocket OSCE</title>
+</head>
+<body>
+    <h2>Test Khám Lâm Sàng (Streaming AI)</h2>
+    
+    <input type="text" id="token" placeholder="Dán JWT Token vào đây..." style="width: 300px;"><br><br>
+    
+    <input type="text" id="sessionId" placeholder="Session ID" value="">
+    <input type="text" id="stationId" placeholder="Station ID" value="">
+    <button onclick="connect()">1. Kết nối</button>
+    <hr>
+    
+    <div id="chatBox" style="height: 300px; border: 1px solid #ccc; overflow-y: scroll; margin-bottom: 10px; padding: 10px;"></div>
+    
+    <input type="text" id="messageInput" style="width: 300px;" placeholder="Nhập câu hỏi...">
+    <button onclick="sendMessage()">2. Gửi tin nhắn</button>
+
+    <script>
+        let ws;
+        let chatBox = document.getElementById("chatBox");
+
+        function connect() {
+            let sId = document.getElementById("sessionId").value;
+            let stId = document.getElementById("stationId").value;
+            let token = document.getElementById("token").value; // Lấy token
+
+            if (!token) {
+                alert("Vui lòng dán Token vào trước khi kết nối!");
+                return;
+            }
+
+            // Gắn token vào query parameter trên URL
+            ws = new WebSocket(`ws://localhost:8000/ws/exam/${sId}/${stId}?token=${token}`);
+
+            ws.onopen = () => { chatBox.innerHTML += `<p style="color: blue;"><i>Đã kết nối máy chủ!</i></p>`; };
+            
+            ws.onmessage = (event) => {
+                let data = JSON.parse(event.data);
+                if (data.event === "system_ack") {
+                    chatBox.innerHTML += `<p style="color: green;"><i>Hệ thống: ${data.message}</i></p>`;
+                } else if (data.error) {
+                    chatBox.innerHTML += `<p style="color: red;"><i>Lỗi: ${data.error}</i></p>`;
+                } else {
+                    // Logic xử lý AI streaming (giữ nguyên như trước)
+                    chatBox.innerHTML += `<p><b>AI:</b> ${event.data}</p>`; 
+                }
+            };
+
+            ws.onerror = (error) => {
+                chatBox.innerHTML += `<p style="color: red;"><i>Lỗi kết nối (Bị từ chối hoặc sai URL)!</i></p>`;
+            };
+        }
+
+        function sendMessage() {
+            let input = document.getElementById("messageInput");
+            let text = input.value;
+            chatBox.innerHTML += `<b>Sinh viên:</b> ${text}<br>`;
+            
+            ws.send(JSON.stringify({ type: "text", content: text }));
+            input.value = ""; 
+        }
+    </script>
+</body>
+</html>
