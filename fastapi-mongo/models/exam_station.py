@@ -15,7 +15,7 @@ class ExamStation(Document):
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
 
-    time_limit: int  
+    time_limit: Optional[int] = None  
 
     class Settings:
         name = "Exam_stations"

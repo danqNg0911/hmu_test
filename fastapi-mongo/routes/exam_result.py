@@ -5,3 +5,4 @@ from models.exam_result import ExamResult
 from schemas.exam_result import ExamResultCreate, ExamResultResponse
 
 router = APIRouter()
+

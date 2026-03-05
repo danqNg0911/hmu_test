@@ -35,3 +35,33 @@ async def process_interview_streaming(msg_format: str, content: str) -> Tuple[st
     ai_reply_stream = mock_llm_stream(user_text)
     
     return user_text, ai_reply_stream
+
+#=================== Agent evaluator =================
+async def mock_evaluate_station(station_id: str, station_type: str, user_data: dict) -> dict:
+    print(f"Đang đánh giá trạm {station_id}")
+    await asyncio.sleep(3)  # tgian đánh giá
+
+    mock_score = 100
+
+    if station_type == "patient_interview" or station_type == "medical_advice":
+        feedback = "Nội dung đánh giá trạm phỏng vấn bệnh nhân"
+    else:
+        feedback = "Nội dung đánh giá trạm QA"
+
+    return {
+        "score": mock_score,
+        "evaluation": feedback
+    }
+
+async def mock_evaluate_exam(session_id: str, list_station_results: list) -> dict:
+    print(f"Đang đánh giá trạm {session_id}")
+    await asyncio.sleep(4)  # tgian đánh giá
+
+    total_score = 100
+
+    overall_feedback = "Nội dung đánh giá tổng thể kỳ thi"
+
+    return {
+        "score": total_score,
+        "overall_evaluation": overall_feedback
+    }

@@ -12,12 +12,12 @@ class ExamStationCreate(BaseModel):
     status: str
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
-    time_limit: int  
+    time_limit: Optional[int]  = None
 
 class ExamStationResponse(ExamStationCreate):
     id: PydanticObjectId 
 
-class ExamStationResponse(BaseModel):
-    status: Optional[str] = None
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
+class ExamStationUpdate(BaseModel):
+    station_number: int
+    status: str
+    remaining_time: datetime
