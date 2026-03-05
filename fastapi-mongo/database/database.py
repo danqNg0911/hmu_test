@@ -7,6 +7,7 @@ from models.patient_info import PatientInfo
 from models.exam_session import ExamSession
 from models.exam_station import ExamStation
 from models.message import Message
+from models.station_result import StationResult, UserAnswer
 
 # ================= USER =================
 
@@ -123,3 +124,51 @@ async def retrieve_chat_history(user_id: str, agent_id: str) -> List[Message]:
 
 async def add_exam_session(new_session: ExamSession) -> ExamSession:
     return await new_session.create()
+
+
+# ================= Station Result =================
+async def create_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, exam_result_id: PydanticObjectId, type: str) -> StationResult:
+    station_result = StationResult(
+        session_id=session_id,
+        station_id=station_id,
+        exam_result_id=exam_result_id,
+        type=type
+    )
+
+    await station_result.insert()
+    return station_result
+
+async def get_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId) -> Optional[StationResult]:
+
+    return await StationResult.find_one(
+        StationResult.session_id == session_id,
+        StationResult.station_id == station_id
+    )
+
+async def append_user_answer(session_id: PydanticObjectId, station_id: PydanticObjectId, answer: UserAnswer) -> Optional[StationResult]:
+    station_result = await get_station_result(session_id, station_id)
+
+    if not station_result:
+        return None
+
+    if station_result.user_answer is None:
+        station_result.user_answer = []
+
+    station_result.user_answer.append(answer)
+
+    await station_result.save()
+
+    return station_result
+
+async def update_station_result_evaluation(session_id: PydanticObjectId, station_id: PydanticObjectId, score: int, evaluation: str) -> Optional[StationResult]:
+    station_result = await get_station_result(session_id, station_id)
+
+    if not station_result:
+        return None
+
+    station_result.score = score
+    station_result.evaluation = evaluation
+
+    await station_result.save()
+
+    return station_result
