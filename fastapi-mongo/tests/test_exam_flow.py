@@ -1,0 +1,56 @@
+import pytest
+from httpx import AsyncClient, ASGITransport
+from fastapi.testclient import TestClient
+from app import app 
+from beanie import PydanticObjectId
+
+client = TestClient(app)
+
+async def test_exam_flow(client: AsyncClient):
+    test_user_id = str(PydanticObjectId())
+    total_stations_test = 2
+
+    response = client.post("/session", json={"user_id": test_user_id, "total_stations": total_stations_test})
+    assert response.status_code == 201
+    session_data = response.json()
+
+    assert session_data["status"] == "IN_PROGRESS"
+    assert session_data["current_station"] == 1
+    session_id = session_data["id"]
+
+    print(f"\n Đã tạo phiên thi thành công: {session_id}")
+
+    for current_step in range(total_stations_test):
+        # Hiển thị đề
+        print(f"\n--- Đang vào trạm số {current_step + 1}/{total_stations_test} ---")
+        response = client.get(f"/session/{session_id}/station")
+        assert response.status_code == 200
+        station_data = response.json()
+
+        assert station_data["current_station"] == current_step + 1
+        print(f"\n Đã lấy thông tin trạm hiện tại: {station_data}")
+
+        # Kết nối WebSocket để thi trạm
+        station_id = station_data["station"]["_id"]
+
+        with client.websocket_connect(f"/ws/exam/{session_id}/{station_id}?token=mock_token") as ws:
+            ws.send_json({"type": "text", "content": "Chào bác sĩ"})
+            while True:
+                resp = ws.receive_json()
+                if resp.get("event") == "agent_response_end" or resp.get("event") == "system_ack":
+                    break
+        print(f"    -> Đã hoàn thành bài thi tại trạm {current_step + 1}")
+
+        # Nộp bài và chuyển trạm
+        if current_step < total_stations_test - 1:
+            response = client.post(f"/session/{session_id}/station/submission")
+            assert response.status_code == 200
+            next_station_data = response.json()
+            assert next_station_data["current_station"] == current_step + 2
+            print(f"\n Đã nộp trạm hiện tại và chuyển trạm tiếp theo: {next_station_data}")
+        else:
+            print(f"\n Đã hoàn thành tất cả các trạm")
+
+    # Xem lại kết quả bài thi
+
+    # Xem lại kết quả 1 trạm chi tiết

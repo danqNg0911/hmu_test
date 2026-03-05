@@ -1,6 +1,7 @@
 import asyncio
 from typing import AsyncGenerator, Tuple
 
+#=================== Agent interaction =================
 async def process_qa(msg_format: str, content: str) -> str:
     """Xử lý trạm QA """
     if msg_format == "audio":
