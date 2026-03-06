@@ -25,5 +25,5 @@ async def initiate_database():
     client = AsyncIOMotorClient(Settings().DATABASE_URL)
     await init_beanie(
        #database=client.get_default_database(), document_models=models.__all__
-       database=client["HMU-test"], document_models=models.__all__
+       database=client["HMU-Test"], document_models=models.__all__
     )

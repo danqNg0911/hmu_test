@@ -185,6 +185,8 @@ async def create_question_station_result(session_id: PydanticObjectId, station_i
     #     await station_result.save()
 
     # return station_result
+    answers = []
+    
     if answers:
         answers = [a.model_dump() for a in user_answer]
 

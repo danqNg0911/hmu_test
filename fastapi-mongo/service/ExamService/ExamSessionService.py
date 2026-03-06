@@ -127,7 +127,7 @@ class ExamSessionService:
             if station_type == "question_answer":
                 await self.StationResultService.handle_question_answer(session_id, station_id, station_type, answers)
 
-            elif station_type == "patient_interview":
+            else:
                 await self.StationResultService.handle_patient_interview(session_id, station_id, station_type)
 
             

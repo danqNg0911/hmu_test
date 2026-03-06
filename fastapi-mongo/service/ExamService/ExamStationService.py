@@ -91,15 +91,6 @@ class ExamStationService:
         if not exam_station:
             raise HTTPException(404, "Exam station not found")
 
-        if exam_station.status == "NOT_STARTED":
-            raise HTTPException(400, "Station not started")
-
-        elif exam_station.status == "SUBMITTED":
-            raise HTTPException(400, "Station already submitted")
-
-        elif exam_station.status == "TIME_OUT":
-            raise HTTPException(400, "Station already timed out")
-
         remaining_time = self.calculate_remaining_time(exam_station)
 
         if remaining_time <= 0:
@@ -112,7 +103,6 @@ class ExamStationService:
                 }
             )
 
-            raise HTTPException(400, "Station time out")
 
         updated = await db.update_exam_station(
             session_id,
