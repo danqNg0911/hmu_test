@@ -119,7 +119,7 @@ class ExamSessionService:
                 raise HTTPException(status_code=400, detail="Exam session already completed")
             
             #cập nhật trạng thái của station trong session đó sang submitted/time_out
-            await self.ExamStationService.check_and_update_exam_station(session_id, session.current_station + 1)
+            await self.ExamStationService.submit_exam_station(session_id, session.current_station + 1)
 
             station_id = session.stations[session.current_station]
 
@@ -127,7 +127,8 @@ class ExamSessionService:
             if station_type == "question_answer":
                 await self.StationResultService.handle_question_answer(session_id, station_id, station_type, answers)
 
-            #elif station.type == "patient_interview":
+            elif station_type == "patient_interview":
+                await self.StationResultService.handle_patient_interview(session_id, station_id, station_type)
 
             
             next_index = session.current_station + 1

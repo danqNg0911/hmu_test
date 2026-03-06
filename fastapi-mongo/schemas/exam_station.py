@@ -21,3 +21,5 @@ class ExamStationUpdate(BaseModel):
     station_number: Optional[int] = None
     status: str
     remaining_time: int
+
+

@@ -83,7 +83,51 @@ class ExamStationService:
                 status=exam_station.status,
                 remaining_time=0
             )
+        
+    async def submit_exam_station(self, session_id: PydanticObjectId, station_number: int):
 
+        exam_station = await db.retrieve_exam_station(session_id, station_number)
+
+        if not exam_station:
+            raise HTTPException(404, "Exam station not found")
+
+        if exam_station.status == "NOT_STARTED":
+            raise HTTPException(400, "Station not started")
+
+        elif exam_station.status == "SUBMITTED":
+            raise HTTPException(400, "Station already submitted")
+
+        elif exam_station.status == "TIME_OUT":
+            raise HTTPException(400, "Station already timed out")
+
+        remaining_time = self.calculate_remaining_time(exam_station)
+
+        if remaining_time <= 0:
+            updated = await db.update_exam_station(
+                session_id,
+                station_number,
+                {
+                    "status": "TIME_OUT",
+                    "finished_at": exam_station.started_at + timedelta(seconds=exam_station.time_limit)
+                }
+            )
+
+            raise HTTPException(400, "Station time out")
+
+        updated = await db.update_exam_station(
+            session_id,
+            station_number,
+            {
+                "status": "SUBMITTED",
+                "finished_at": datetime.now(timezone.utc)
+            }
+        )
+
+        return ExamStationUpdate(
+                station_number=station_number,
+                status=updated.status,
+                remaining_time=0
+            )
 
 
     def calculate_remaining_time(self, station: ExamStation) -> int:

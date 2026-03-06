@@ -123,16 +123,6 @@ async def add_exam_session(new_session: ExamSession) -> ExamSession:
 
 
 # ================= Station Result =================
-async def create_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, exam_result_id: PydanticObjectId, type: str) -> StationResult:
-    station_result = StationResult(
-        session_id=session_id,
-        station_id=station_id,
-        exam_result_id=exam_result_id,
-        type=type
-    )
-
-    await station_result.insert()
-    return station_result
 
 async def get_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId) -> Optional[StationResult]:
 
@@ -169,7 +159,7 @@ async def update_station_result_evaluation(session_id: PydanticObjectId, station
 
     return station_result
 
-async def create_or_update_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, type: str, user_answer: List[UserAnswer]) -> StationResult:
+async def create_question_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, type: str, user_answer: List[UserAnswer]) -> StationResult:
     # station_result = await StationResult.find_one(
     #     "session_id" == session_id,
     #     "station_id" == station_id
@@ -195,13 +185,24 @@ async def create_or_update_station_result(session_id: PydanticObjectId, station_
     #     await station_result.save()
 
     # return station_result
-    answers = [a.model_dump() for a in user_answer]
+    if answers:
+        answers = [a.model_dump() for a in user_answer]
 
     station_result = StationResult(
         session_id=session_id,
         station_id=station_id,
         type=type,
         user_answer=answers
+    )
+
+    await station_result.insert()
+    return station_result
+
+async def create_interview_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, type: str) -> StationResult:
+    station_result = StationResult(
+        session_id=session_id,
+        station_id=station_id,
+        type=type
     )
 
     await station_result.insert()
