@@ -13,19 +13,18 @@ router = APIRouter()
 
 @router.websocket("/{session_id}/{station_id}")
 async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station_id: str, token: str = Query(None)):
+    await websocket.accept()
+
     if token is None:
-        await websocket.accept()
         await websocket.send_json({"error": "Token xác thực không được cung cấp"})
         await websocket.close(code=1008)
         return
+    
     user_data = decode_jwt(token)
     if not user_data:
-        await websocket.accept()
         await websocket.send_json({"error": "Token xác thực không hợp lệ"})
         await websocket.close(code=1008)
         return
-    
-    await websocket.accept()
     
     try:
         station = await retrieve_station(PydanticObjectId(station_id))
@@ -49,11 +48,13 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
             content = data.get("content")
             question_id = data.get("question_id")
 
-            if station_type == "patient_interview":
+            if station_type == "patient_interview" or station_type == "medical_advice":
                 # Gọi Service để lấy câu của User và Dialog-gen luồng trả lời của AI
                 user_text, ai_reply_stream = await process_interview_streaming(msg_format, content)
                 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender=session_id, recipient="agent", messageType=msg_format, content=user_text
                 )))
                 
@@ -70,6 +71,8 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
                 await websocket.send_json({"event": "agent_response_end"})
 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender="agent", recipient=session_id, messageType="text", content=full_ai_reply
                 )))
 
@@ -77,6 +80,8 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
                 user_text = await process_qa(msg_format, content)
                 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender=session_id, 
                     recipient="system", 
                     messageType=msg_format, 

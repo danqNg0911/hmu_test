@@ -109,14 +109,10 @@ async def update_exam_station(session_id: PydanticObjectId, station_number: int,
 async def add_message(new_message: Message) -> Message:
     return await new_message.create()
 
-async def retrieve_chat_history(user_id: str, agent_id: str) -> List[Message]:
+async def retrieve_chat_history(session_id: str, station_id: str) -> List[Message]:
     messages = await Message.find(
-        {
-            "$or": [
-                {"sender": user_id, "recipient": agent_id},
-                {"sender": agent_id, "recipient": user_id}
-            ]
-        }
+        Message.session_id == PydanticObjectId(session_id),
+        Message.station_id == PydanticObjectId(station_id)
     ).sort("+timestamp").to_list()
     return messages
 

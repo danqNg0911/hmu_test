@@ -12,7 +12,7 @@ from database import database as db
 logger = logging.getLogger(__name__)
 
 class ExamStationService:
-    async def create_initial_exam_stations(self, session_id: PydanticObjectId, user_id: PydanticObjectId, stations_id: List[PydanticObjectId], stations_time: List[int]) -> None:
+    async def create_initial_exam_stations(self, session_id: PydanticObjectId, user_id: str, stations_id: List[PydanticObjectId], stations_time: List[int]) -> None:
         exam_stations = []
 
         for index, (station_id, time_limit) in enumerate(zip(stations_id, stations_time)):

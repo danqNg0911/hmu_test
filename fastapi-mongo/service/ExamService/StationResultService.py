@@ -17,5 +17,6 @@ class StationResultService:
 
         print(evaluation)
         
-    #async def handle_patient_interview(self, session, station):
+    async def handle_patient_interview(self, session, station):
+        
         

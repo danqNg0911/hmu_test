@@ -179,5 +179,3 @@ class ExamSessionService:
         except Exception as e:
             logger.error(f"Error submitting station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
-
-        

@@ -3,6 +3,7 @@ from typing import AsyncGenerator, Tuple
 from schemas.station_result import UserAnswerRequest
 from typing import List
 
+#=================== Agent interaction =================
 async def process_qa(msg_format: str, content: str) -> str:
     """Xử lý trạm QA """
     if msg_format == "audio":
@@ -37,6 +38,7 @@ async def process_interview_streaming(msg_format: str, content: str) -> Tuple[st
     
     return user_text, ai_reply_stream
 
+#=================== Agent evaluator =================
 async def mock_evaluate_station(station_id: str, station_type: str, user_data: dict) -> dict:
     print(f"Đang đánh giá trạm {station_id}")
     await asyncio.sleep(3)  # tgian đánh giá
@@ -67,7 +69,7 @@ async def mock_evaluate_question_answer_station(station_id: str, station_type: s
     }
 
 async def mock_evaluate_exam(session_id: str, list_station_results: list) -> dict:
-    print(f"Đang đánh giá bài thi {session_id}")
+    print(f"Đang đánh giá trạm {session_id}")
     await asyncio.sleep(4)  # tgian đánh giá
 
     total_score = 100
