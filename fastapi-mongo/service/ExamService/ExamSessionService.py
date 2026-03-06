@@ -5,8 +5,11 @@ import logging
 from models.exam_session import ExamSession
 from fastapi import HTTPException
 from models.station import Station
+from models.exam_station import ExamStation
 from schemas.exam_session import ExamSessionCreate, ExamSessionResponse, ExamSessionUpdate, ExamSessionStartResponse
-from ExamStationService import ExamStationService
+from schemas.station_result import UserAnswerRequest, UserAnswer
+from service.ExamService.ExamStationService import ExamStationService
+from service.ExamService.StationResultService import StationResultService
 from database import database as db
 
 logger = logging.getLogger(__name__)
@@ -14,6 +17,7 @@ logger = logging.getLogger(__name__)
 class ExamSessionService:
     def __init__(self):
         self.ExamStationService = ExamStationService()
+        self.StationResultService = StationResultService()
     
     async def startExamSession(self, user_id: str, total_stations: int):
         try:
@@ -33,7 +37,7 @@ class ExamSessionService:
             )
 
             saved_session = await db.add_exam_session(new_session)
-            await self.ExamStationService.create_initial_exam_stations(saved_session.sesion_id, user_id, stations_id, stations_time)
+            await self.ExamStationService.create_initial_exam_stations(saved_session.id, PydanticObjectId(user_id), stations_id, stations_time)
 
             return ExamSessionStartResponse(
                 id = saved_session.id,
@@ -102,7 +106,7 @@ class ExamSessionService:
             logger.error(f"Error retrieving current station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
 
-    async def submitCurrentStation(self, session_id: PydanticObjectId):
+    async def submitCurrentStation(self, session_id: PydanticObjectId, station_type: str, answers: List[UserAnswerRequest]):
         try:
             session = await db.retrieve_exam_session(session_id)
             if not session:
@@ -117,8 +121,11 @@ class ExamSessionService:
             #cập nhật trạng thái của station trong session đó sang submitted/time_out
             await self.ExamStationService.check_and_update_exam_station(session_id, session.current_station + 1)
 
+            station_id = session.stations[session.current_station]
+
             #xử lý logic nộp kết quả 
-            #if station.type == "question_answer":
+            if station_type == "question_answer":
+                await self.StationResultService.handle_question_answer(session_id, station_id, station_type, answers)
 
             #elif station.type == "patient_interview":
 

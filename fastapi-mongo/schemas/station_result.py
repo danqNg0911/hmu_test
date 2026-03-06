@@ -2,17 +2,18 @@ from beanie import Document, PydanticObjectId
 from typing import List, Optional
 from pydantic import BaseModel
 
-class UserAnswerSchema(BaseModel):
+class UserAnswerRequest(BaseModel):
     question_id: PydanticObjectId
     answer_content: str
-    evaluation: str
+
+class UserAnswer(UserAnswerRequest):
+    evaluation: Optional[str] = None
 
 class StationResultCreate(BaseModel):
+    session_id: PydanticObjectId
     station_id: PydanticObjectId
-    patient_id: PydanticObjectId
-    exam_result_id: PydanticObjectId
     type: str
-    user_answer: Optional[List[UserAnswerSchema]] = None
+    user_answer: Optional[List[UserAnswer]] = None
     score: Optional[int]
     evaluation: Optional[str]
 

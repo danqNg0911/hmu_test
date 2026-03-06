@@ -18,6 +18,6 @@ class ExamStationResponse(ExamStationCreate):
     id: PydanticObjectId 
 
 class ExamStationUpdate(BaseModel):
-    station_number: int
+    station_number: Optional[int] = None
     status: str
-    remaining_time: datetime
+    remaining_time: int

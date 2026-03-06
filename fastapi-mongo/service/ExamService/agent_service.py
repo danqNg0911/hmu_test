@@ -1,5 +1,7 @@
 import asyncio
 from typing import AsyncGenerator, Tuple
+from schemas.station_result import UserAnswerRequest
+from typing import List
 
 async def process_qa(msg_format: str, content: str) -> str:
     """Xử lý trạm QA """
@@ -45,6 +47,19 @@ async def mock_evaluate_station(station_id: str, station_type: str, user_data: d
         feedback = "Nội dung đánh giá trạm phỏng vấn bệnh nhân"
     else:
         feedback = "Nội dung đánh giá trạm QA"
+
+    return {
+        "score": mock_score,
+        "evaluation": feedback
+    }
+
+async def mock_evaluate_question_answer_station(station_id: str, station_type: str, user_answers: List[UserAnswerRequest]) -> dict:
+    print(f"Đang đánh giá trạm {station_id}")
+    await asyncio.sleep(3)  # tgian đánh giá
+
+    mock_score = 100
+
+    feedback = "Nội dung đánh giá trạm QA"
 
     return {
         "score": mock_score,

@@ -172,3 +172,41 @@ async def update_station_result_evaluation(session_id: PydanticObjectId, station
     await station_result.save()
 
     return station_result
+
+async def create_or_update_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId, type: str, user_answer: List[UserAnswer]) -> StationResult:
+    # station_result = await StationResult.find_one(
+    #     "session_id" == session_id,
+    #     "station_id" == station_id
+    # )
+
+    # if not station_result:
+    #     station_result = StationResult(
+    #         session_id=session_id,
+    #         station_id=station_id,
+    #         type=type,
+    #         user_answer=user_answer
+    #     )
+
+    #     await station_result.insert()
+    #     return station_result
+
+    # if user_answer:
+    #     if station_result.user_answer is None:
+    #         station_result.user_answer = []
+
+    #     station_result.user_answer.append(user_answer)
+
+    #     await station_result.save()
+
+    # return station_result
+    answers = [a.model_dump() for a in user_answer]
+
+    station_result = StationResult(
+        session_id=session_id,
+        station_id=station_id,
+        type=type,
+        user_answer=answers
+    )
+
+    await station_result.insert()
+    return station_result

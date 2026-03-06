@@ -6,24 +6,15 @@ from pydantic import BaseModel
 class UserAnswer(BaseModel):
     question_id: PydanticObjectId
     answer_content: str
-    evaluation: str
+    evaluation: Optional[str] = None
 
 class StationResult(Document):
     session_id: PydanticObjectId
     station_id: PydanticObjectId
-    exam_result_id: PydanticObjectId
     type: str
-    user_answer: List[UserAnswer]
-    score: int
-    evaluation: str
+    user_answer: Optional[List[UserAnswer]] = None
+    score: Optional[int] = None
+    evaluation: Optional[str] = None
 
     class Settings:
-        name = "station_results"
-        indexes = [
-            [
-                ("session_id", 1),
-                ("station_id", 1)
-            ]
-        ]
-        
-    
+        name = "Station_results"

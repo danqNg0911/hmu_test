@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Body, Depends, status
 from beanie import PydanticObjectId
 from pydantic import BaseModel
+from typing import List, Optional
 
 from models.exam_session import ExamSession
 from schemas.exam_session import ExamSessionCreate, ExamSessionResponse, ExamSessionUpdate
 from service.ExamService.ExamSessionService import ExamSessionService
+from schemas.station_result import UserAnswerRequest
 
 router = APIRouter()
 
@@ -43,6 +45,8 @@ async def get_current_station(
 )
 async def submit_station(
     session_id: PydanticObjectId,
+    station_type: str,
+    answers: Optional[List[UserAnswerRequest]] = None,
     service: ExamSessionService = Depends(ExamSessionService)
 ):
-    return await service.submitCurrentStation(session_id)
+    return await service.submitCurrentStation(session_id, station_type, answers)
