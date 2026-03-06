@@ -14,7 +14,7 @@ async def send_message(msg_data: MessageCreate = Body(...)):
     created_message = await add_message(new_message)
     return created_message
 
-@router.get("/history/{user_id}/{agent_id}", response_model=List[MessageResponse])
-async def get_chat_history(user_id: str, agent_id: str):
-    messages = await retrieve_chat_history(user_id, agent_id)
+@router.get("/history/{session_id}/{station_id}", response_model=List[MessageResponse])
+async def get_chat_history(session_id: str, station_id: str):
+    messages = await retrieve_chat_history(session_id, station_id)
     return messages

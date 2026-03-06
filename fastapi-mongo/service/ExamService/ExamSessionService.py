@@ -5,8 +5,9 @@ import logging
 from models.exam_session import ExamSession
 from fastapi import HTTPException
 from models.station import Station
+from models.exam_station import ExamStation
 from schemas.exam_session import ExamSessionCreate, ExamSessionResponse, ExamSessionUpdate, ExamSessionStartResponse
-from ExamStationService import ExamStationService
+from service.ExamService.ExamStationService import ExamStationService
 from database import database as db
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class ExamSessionService:
             )
 
             saved_session = await db.add_exam_session(new_session)
-            await self.ExamStationService.create_initial_exam_stations(saved_session.sesion_id, user_id, stations_id, stations_time)
+            await self.ExamStationService.create_initial_exam_stations(saved_session.id, PydanticObjectId(user_id), stations_id, stations_time)
 
             return ExamSessionStartResponse(
                 id = saved_session.id,
@@ -102,7 +103,7 @@ class ExamSessionService:
             logger.error(f"Error retrieving current station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
 
-    async def submitCurrentStation(self, session_id: PydanticObjectId):
+    async def submitCurrentStation(self, session_id: PydanticObjectId, ):
         try:
             session = await db.retrieve_exam_session(session_id)
             if not session:
@@ -172,5 +173,3 @@ class ExamSessionService:
         except Exception as e:
             logger.error(f"Error submitting station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
-
-        

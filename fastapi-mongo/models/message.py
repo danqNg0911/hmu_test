@@ -1,8 +1,10 @@
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from datetime import datetime
 from pydantic import Field
 
 class Message(Document):
+    session_id: PydanticObjectId
+    station_id: PydanticObjectId
     sender: str
     recipient: str
     messageType: str

@@ -53,6 +53,8 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
                 user_text, ai_reply_stream = await process_interview_streaming(msg_format, content)
                 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender=session_id, recipient="agent", messageType=msg_format, content=user_text
                 )))
                 
@@ -69,6 +71,8 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
                 await websocket.send_json({"event": "agent_response_end"})
 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender="agent", recipient=session_id, messageType="text", content=full_ai_reply
                 )))
 
@@ -76,6 +80,8 @@ async def exam_websocket_endpoint(websocket: WebSocket, session_id: str, station
                 user_text = await process_qa(msg_format, content)
                 
                 asyncio.create_task(add_message(Message(
+                    session_id=PydanticObjectId(session_id),
+                    station_id=PydanticObjectId(station_id),
                     sender=session_id, 
                     recipient="system", 
                     messageType=msg_format, 

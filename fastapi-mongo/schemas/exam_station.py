@@ -20,4 +20,4 @@ class ExamStationResponse(ExamStationCreate):
 class ExamStationUpdate(BaseModel):
     station_number: int
     status: str
-    remaining_time: datetime
+    remaining_time: int

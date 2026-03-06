@@ -19,12 +19,12 @@ class ExamStation(Document):
 
     class Settings:
         name = "Exam_stations"
-        indexes = [
-            {
-                "keys": [
-                    ("session_id", 1),
-                    ("station_number", 1)
-                ],
-                "unique": True
-            }
-        ]
+        # indexes = [
+        #     {
+        #         "keys": [
+        #             ("session_id", 1),
+        #             ("station_number", 1)
+        #         ],
+        #         "unique": True
+        #     }
+        # ]

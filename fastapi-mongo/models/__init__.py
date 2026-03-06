@@ -4,6 +4,8 @@ from models.patient_info import PatientInfo
 from models.message import Message
 from models.exam_session import ExamSession
 from models.exam_result import ExamResult
+from models.exam_station import ExamStation
+from models.station_result import StationResult
 
 __all__ = [
     User,
@@ -11,5 +13,7 @@ __all__ = [
     PatientInfo,
     Message,
     ExamSession,
-    ExamResult
+    ExamResult,
+    ExamStation,
+    StationResult
 ]

@@ -12,7 +12,7 @@ from database import database as db
 logger = logging.getLogger(__name__)
 
 class ExamStationService:
-    async def create_initial_exam_stations(self, session_id: PydanticObjectId, user_id: PydanticObjectId, stations_id: List[PydanticObjectId], stations_time: List[int]) -> None:
+    async def create_initial_exam_stations(self, session_id: PydanticObjectId, user_id: str, stations_id: List[PydanticObjectId], stations_time: List[int]) -> None:
         exam_stations = []
 
         for index, (station_id, time_limit) in enumerate(zip(stations_id, stations_time)):
@@ -49,6 +49,7 @@ class ExamStationService:
             )
 
             return ExamStationUpdate(
+                station_number=station_number,
                 status="IN_PROGRESS",
                 remaining_time=exam_station.time_limit
             )
@@ -66,16 +67,19 @@ class ExamStationService:
                 )
 
                 return ExamStationUpdate(
+                    station_number=station_number,
                     status="TIME_OUT",
                     remaining_time=0
                 )
             return ExamStationUpdate(
+                station_number=station_number,
                 status="IN_PROGRESS",
                 remaining_time=remaining_time
             )
         
         else:
             return ExamStationUpdate(
+                station_number=station_number,
                 status=exam_station.status,
                 remaining_time=0
             )
@@ -87,7 +91,12 @@ class ExamStationService:
             return station.time_limit
 
         now = datetime.now(timezone.utc)
-        elapse = (now - station.started_at).total_seconds()
+        started_at = station.started_at
+        
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=timezone.utc)
+        
+        elapse = (now - started_at).total_seconds()
         remaining = station.time_limit - int(elapse)
 
         return remaining
