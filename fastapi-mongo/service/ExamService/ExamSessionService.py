@@ -1,6 +1,7 @@
 from typing import List, Optional
 from beanie import PydanticObjectId
 import logging
+from datetime import datetime
 
 from models.exam_session import ExamSession
 from fastapi import HTTPException
@@ -106,7 +107,7 @@ class ExamSessionService:
             logger.error(f"Error retrieving current station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
 
-    async def submitCurrentStation(self, session_id: PydanticObjectId, station_type: str, answers: List[UserAnswerRequest]):
+    async def submitCurrentStation(self, session_id: PydanticObjectId, station_id: str, answers: List[UserAnswerRequest]):
         try:
             session = await db.retrieve_exam_session(session_id)
             if not session:
@@ -121,21 +122,47 @@ class ExamSessionService:
             #cập nhật trạng thái của station trong session đó sang submitted/time_out
             await self.ExamStationService.submit_exam_station(session_id, session.current_station + 1)
 
-            station_id = session.stations[session.current_station]
+            station_id_obj = session.stations[session.current_station]
+            station = await db.retrieve_station(station_id_obj)
+            station_type = station.type
 
             #xử lý logic nộp kết quả 
             if station_type == "question_answer":
-                await self.StationResultService.handle_question_answer(session_id, station_id, station_type, answers)
+                await self.StationResultService.handle_question_answer(session_id, station_id_obj, station_type, answers)
 
             else:
-                await self.StationResultService.handle_patient_interview(session_id, station_id, station_type)
+                await self.StationResultService.handle_patient_interview(session_id, station_id_obj, station_type)
 
             
             next_index = session.current_station + 1
             total = len(session.stations)
 
+            #xử lý nộp trạm cuối -> nộp cả bài thi
             if next_index >= total:
-                raise HTTPException(status_code=400, detail="Invalid station index")
+                # cập nhật session hoàn thành
+                await db.update_exam_session_data(
+                    session_id,
+                    {"status": "COMPLETED"}
+                )
+                
+                station_results = await db.get_all_station_results(session_id)
+                total_score = sum(result.score or 0 for result in station_results)
+                stations = await db.get_stations_by_session_ids([session_id])
+                session_start_time = stations[0].started_at
+
+                # lưu kết quả cả bài thi
+                await db.create_exam_result(
+                    user_id=session.user_id,
+                    start_at=session_start_time,
+                    end_at=datetime.utcnow(),
+                    total_score=total_score,
+                    overall_feedback=None
+                )
+                
+                return {
+                    "status": "COMPLETED",
+                    "message": "Exam completed successfully"
+                }
             
             next_station_id = session.stations[next_index]
             next_station = await db.retrieve_station(next_station_id)
@@ -159,6 +186,7 @@ class ExamSessionService:
             logger.error(f"Error submitting station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
 
+    #tạm thời bỏ qua
     async def submitExamSession(self, session_id: PydanticObjectId):
         try:
             session = await db.retrieve_exam_session(session_id)

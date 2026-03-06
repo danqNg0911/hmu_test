@@ -8,7 +8,7 @@ class ExamResult(Document):
     start_at: datetime
     end_at: datetime
     total_score: int
-    overall_feedback: str
+    overall_feedback: Optional[str] = None
 
     class Settings:
         name = "Exam_results"

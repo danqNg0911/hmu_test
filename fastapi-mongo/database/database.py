@@ -1,5 +1,6 @@
 from typing import List, Union, Optional
 from beanie import PydanticObjectId
+from datetime import datetime
 
 from models.user import User
 from models.station import Station
@@ -7,7 +8,10 @@ from models.patient_info import PatientInfo
 from models.exam_session import ExamSession
 from models.exam_station import ExamStation
 from models.message import Message
+from models.station_result import StationResult
+from models.exam_result import ExamResult
 from models.station_result import StationResult, UserAnswer
+from models.exam_result import ExamResult
 
 # ================= USER =================
 
@@ -89,6 +93,9 @@ async def retrieve_exam_station(session_id: PydanticObjectId, station_number: in
 async def get_exam_station_by_id(station_id: PydanticObjectId) -> Optional[ExamStation]:
     return await ExamStation.get(station_id)
 
+async def get_stations_by_session_ids(session_ids: List[PydanticObjectId]) -> List[ExamStation]:
+    return await ExamStation.find({"session_id": {"$in": session_ids}}).to_list()
+
 async def update_exam_station(session_id: PydanticObjectId, station_number: int, update_data: dict) -> Optional[ExamStation]:
     exam_station = await ExamStation.find_one(
         ExamStation.session_id == session_id,
@@ -130,6 +137,9 @@ async def get_station_result(session_id: PydanticObjectId, station_id: PydanticO
         StationResult.session_id == session_id,
         StationResult.station_id == station_id
     )
+
+async def get_all_station_results(session_id: PydanticObjectId) -> List[StationResult]:
+    return await StationResult.find(StationResult.session_id == session_id).to_list()
 
 async def append_user_answer(session_id: PydanticObjectId, station_id: PydanticObjectId, answer: UserAnswer) -> Optional[StationResult]:
     station_result = await get_station_result(session_id, station_id)
@@ -209,3 +219,23 @@ async def create_interview_station_result(session_id: PydanticObjectId, station_
 
     await station_result.insert()
     return station_result
+
+async def get_all_station_results(session_id: PydanticObjectId) -> List[StationResult]:
+    return await StationResult.find(StationResult.session_id == session_id).to_list()
+
+# ================= EXAM RESULT =================
+
+async def create_exam_result(user_id: PydanticObjectId, start_at: datetime, end_at: datetime, total_score: int, overall_feedback: Optional[str] = None) -> ExamResult:
+    exam_result = ExamResult(
+        user_id=user_id,
+        start_at=start_at,
+        end_at=end_at,
+        total_score=total_score,
+        overall_feedback=overall_feedback
+    )
+
+    await exam_result.insert()
+    return exam_result
+
+async def retrieve_exam_result(user_id: PydanticObjectId) -> List[ExamResult]:
+    return await ExamResult.find(ExamResult.user_id == user_id).to_list()

@@ -20,6 +20,8 @@ class StationResultService:
 
         print(evaluation)
         
+        await db.update_station_result_evaluation(session_id, station_id, evaluation["score"], evaluation["evaluation"])
+        
     async def handle_patient_interview(self, session_id: PydanticObjectId, station_id: PydanticObjectId, type: str) -> None:
         await db.create_interview_station_result(session_id, station_id, type)
 
@@ -28,6 +30,8 @@ class StationResultService:
         evaluation = await agent_service.mock_evaluate_station(station_id, type, dialog)
 
         print(evaluation)
+        
+        await db.update_station_result_evaluation(session_id, station_id, evaluation["score"], evaluation["evaluation"])
 
 
 
