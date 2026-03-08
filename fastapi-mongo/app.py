@@ -4,7 +4,7 @@ from routes.station import router as StationRouter
 from routes.patient_info import router as PatientInfoRouter
 from routes.exam_session import router as ExamSessionRouter
 from routes.message import router as MessageRouter
-from routes.exam_result import router as ExamResultRouter
+from routes.result import router as ResultRouter
 from routes.ws_exam import router as ExamWebSocketRouter
 
 from auth.jwt_bearer import JWTBearer
@@ -30,5 +30,5 @@ app.include_router(StationRouter, tags=["Station"], prefix="/station")
 app.include_router(PatientInfoRouter, tags=["Patient Info"], prefix="/patient-info")
 app.include_router(ExamSessionRouter, tags=["Exam Session"], prefix="/session")
 app.include_router(MessageRouter, tags=["Message"], prefix="/message")
-app.include_router(ExamResultRouter, tags=["Exam Result"], prefix="/exam-result")
+app.include_router(ResultRouter, tags=["Result"], prefix="/result")
 app.include_router(ExamWebSocketRouter, tags=["WebSocket Exam"], prefix="/ws/exam")

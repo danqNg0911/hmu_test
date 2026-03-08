@@ -10,7 +10,6 @@ class PatientInfoCreate(BaseModel):
     avt_url: str
     voice_id: str
     description: str
-    stationIds: Optional[List[PydanticObjectId]] = None
 
 class PatientInfoUpdate(BaseModel):
     version: Optional[str] = None
@@ -20,7 +19,6 @@ class PatientInfoUpdate(BaseModel):
     avt_url: Optional[str] = None
     voice_id: Optional[str] = None
     description: Optional[str] = None
-    stationIds: Optional[List[PydanticObjectId]] = None
 
 class PatientInfoResponse(PatientInfoCreate):
     id: PydanticObjectId

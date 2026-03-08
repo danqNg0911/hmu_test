@@ -17,5 +17,16 @@ class ExamResultUpdate(BaseModel):
     end_at: datetime
     total_score: int
     overall_feedback: str
-        
+
+class ExamResultResponse(Document):
+    session_id: PydanticObjectId
+    user_id: PydanticObjectId 
+    start_at: datetime
+    end_at: datetime
+    total_score: int
+    overall_feedback: Optional[str] = None
+    stations_summary: Optional[dict] = None
+
+    class Settings:
+        name = "Exam_results"
     

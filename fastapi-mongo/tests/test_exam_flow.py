@@ -41,16 +41,26 @@ async def test_exam_flow(client: AsyncClient):
                     break
         print(f"    -> Đã hoàn thành bài thi tại trạm {current_step + 1}")
 
-        # Nộp bài và chuyển trạm
+        # Nộp bài và chuyển trạm (hoặc hoàn thành kỳ thi nếu đây là trạm cuối)
+        response = client.post(f"/session/{session_id}/station/submission")
+        assert response.status_code == 200
+        submission_data = response.json()
         if current_step < total_stations_test - 1:
-            response = client.post(f"/session/{session_id}/station/submission")
-            assert response.status_code == 200
-            next_station_data = response.json()
-            assert next_station_data["current_station"] == current_step + 2
-            print(f"\n Đã nộp trạm hiện tại và chuyển trạm tiếp theo: {next_station_data}")
+            assert submission_data["current_station"] == current_step + 2
+            print(f"\n Đã nộp trạm hiện tại và chuyển trạm tiếp theo: {submission_data}")
         else:
-            print(f"\n Đã hoàn thành tất cả các trạm")
+            # cuối cùng, nên nhận trạng thái COMPLETED
+            assert submission_data["status"] == "COMPLETED"
+            print(f"\n Đã hoàn tất kỳ thi: {submission_data}")
 
     # Xem lại kết quả bài thi
+    response = client.get(f"/exam-result/{session_id}")
+    assert response.status_code == 200
+    exam_results = response.json()
+    assert isinstance(exam_results, list)
+    assert len(exam_results) == 1
+    result = exam_results[0]
+    assert result["total_score"] == 100
+    assert result.get("overall_feedback") is None
 
     # Xem lại kết quả 1 trạm chi tiết

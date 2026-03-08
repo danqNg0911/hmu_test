@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class ExamResult(Document):
+    session_id: PydanticObjectId
     user_id: PydanticObjectId 
     start_at: datetime
     end_at: datetime

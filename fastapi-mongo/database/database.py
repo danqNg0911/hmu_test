@@ -1,3 +1,4 @@
+from ast import In
 from typing import List, Union, Optional
 from beanie import PydanticObjectId
 from datetime import datetime
@@ -225,8 +226,9 @@ async def get_all_station_results(session_id: PydanticObjectId) -> List[StationR
 
 # ================= EXAM RESULT =================
 
-async def create_exam_result(user_id: PydanticObjectId, start_at: datetime, end_at: datetime, total_score: int, overall_feedback: Optional[str] = None) -> ExamResult:
+async def create_exam_result(session_id: PydanticObjectId, user_id: PydanticObjectId, start_at: datetime, end_at: datetime, total_score: int, overall_feedback: Optional[str] = None) -> ExamResult:
     exam_result = ExamResult(
+        session_id=session_id,
         user_id=user_id,
         start_at=start_at,
         end_at=end_at,
@@ -237,5 +239,30 @@ async def create_exam_result(user_id: PydanticObjectId, start_at: datetime, end_
     await exam_result.insert()
     return exam_result
 
-async def retrieve_exam_result(user_id: PydanticObjectId) -> List[ExamResult]:
-    return await ExamResult.find(ExamResult.user_id == user_id).to_list()
+async def retrieve_exam_list_result() -> List[ExamResult]:
+    return await ExamResult.find().to_list()
+
+async def retrieve_exam_result(session_id: PydanticObjectId) -> Optional[ExamResult]:
+    exam_result = await ExamResult.find_one(ExamResult.session_id == session_id)
+    
+    station_results = await get_all_station_results(session_id)
+    station_ids = [sr.station_id for sr in station_results]
+    stations_info = await Station.find(In(Station.id, station_ids)).to_list()
+    station_map = {str(station.id): station for station in stations_info}
+    station_summaries = []
+    for sr in station_results:
+        station_info = station_map.get(str(sr.station_id))
+        if station_info:
+            station_summaries.append({
+                "station_id": sr.station_id,
+                "station_name": station_info.name,
+                "score": sr.score,
+                "evaluation": sr.evaluation
+            })
+        return {
+            "session_id": exam_result.session_id,
+            "overall_score": exam_result.overall_score,
+            "max_overall_score": exam_result.total_score,
+            "overall_feedback": exam_result.overall_feedback,
+            "stations_summary": station_summaries
+        }

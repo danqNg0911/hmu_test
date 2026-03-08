@@ -15,10 +15,10 @@ async def create_station(station_data: StationCreate = Body(...)):
     create_station = await add_station(new_station)
     return create_station
 
-@router.get("/", response_model=List[StationResponse])
-async def get_all_stations():
-    stations = await retrieve_stations()
-    return stations
+# @router.get("/", response_model=List[StationResponse])
+# async def get_all_stations():
+#     stations = await retrieve_stations()
+#     return stations
 
 @router.get("/{id}", response_model=StationResponse)
 async def get_station(id: PydanticObjectId):

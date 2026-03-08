@@ -1,5 +1,5 @@
-from beanie import Document
-from pydantic import BaseModel, EmailStr
+from beanie import Document, PydanticObjectId
+from pydantic import BaseModel
 from typing import List, Optional
 
 class Rubric(BaseModel):
@@ -18,6 +18,8 @@ class PresentedFinding(BaseModel):
     content: str
 
 class Station(Document):
+    patient_info_id: Optional[PydanticObjectId] = None
+    name: str
     type: str
     presented_findings: Optional[List[PresentedFinding]] = None
     questions: List[Question]

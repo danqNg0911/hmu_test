@@ -152,6 +152,7 @@ class ExamSessionService:
 
                 # lưu kết quả cả bài thi
                 await db.create_exam_result(
+                    session_id=session_id,
                     user_id=session.user_id,
                     start_at=session_start_time,
                     end_at=datetime.utcnow(),
