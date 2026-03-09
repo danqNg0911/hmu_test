@@ -21,7 +21,7 @@ class ExamStationService:
                     session_id=session_id,
                     user_id=user_id,
                     station_id=station_id,
-                    station_number=index + 1,
+                    station_number=index,
                     status="NOT_STARTED",
                     time_limit=time_limit
                 )
@@ -34,27 +34,26 @@ class ExamStationService:
     
     async def check_and_update_exam_station(self, session_id: PydanticObjectId, station_number: int):
         exam_station = await db.retrieve_exam_station(session_id, station_number)
-
         if not exam_station:
             raise HTTPException(404, "Exam station not found")
-        
+
         if exam_station.status == "NOT_STARTED":
             await db.update_exam_station(
-                session_id,
-                station_number,
-                {
-                    "status": "IN_PROGRESS",
-                    "started_at": datetime.now(timezone.utc)
-                }
-            )
-
+                    session_id,
+                    station_number,
+                    {
+                        "status": "IN_PROGRESS",
+                        "started_at": datetime.now(timezone.utc)
+                    }
+                )
+            
             return ExamStationUpdate(
-                station_number=station_number,
-                status="IN_PROGRESS",
-                remaining_time=exam_station.time_limit
-            )
+                    station_number=station_number,
+                    status="IN_PROGRESS",
+                    remaining_time=exam_station.time_limit
+                )
         
-        elif exam_station.status == "IN_PROGRESS":
+        if exam_station.status == "IN_PROGRESS":
             remaining_time = self.calculate_remaining_time(exam_station)
             if remaining_time <= 0:
                 await db.update_exam_station(
@@ -77,12 +76,11 @@ class ExamStationService:
                 remaining_time=remaining_time
             )
         
-        else:
-            return ExamStationUpdate(
-                station_number=station_number,
-                status=exam_station.status,
-                remaining_time=0
-            )
+        return ExamStationUpdate(
+            station_number=station_number,
+            status=exam_station.status,
+            remaining_time=0
+        )
         
     async def submit_exam_station(self, session_id: PydanticObjectId, station_number: int):
 
@@ -90,6 +88,13 @@ class ExamStationService:
 
         if not exam_station:
             raise HTTPException(404, "Exam station not found")
+        
+        if exam_station.status in ["SUBMITTED", "TIME_OUT"]:
+            return ExamStationUpdate(
+                station_number=station_number,
+                status=exam_station.status,
+                remaining_time=0
+            )
 
         remaining_time = self.calculate_remaining_time(exam_station)
 
@@ -102,16 +107,15 @@ class ExamStationService:
                     "finished_at": exam_station.started_at + timedelta(seconds=exam_station.time_limit)
                 }
             )
-
-
-        updated = await db.update_exam_station(
-            session_id,
-            station_number,
-            {
-                "status": "SUBMITTED",
-                "finished_at": datetime.now(timezone.utc)
-            }
-        )
+        else:
+            updated = await db.update_exam_station(
+                session_id,
+                station_number,
+                {
+                    "status": "SUBMITTED",
+                    "finished_at": datetime.now(timezone.utc)
+                }
+            )
 
         return ExamStationUpdate(
                 station_number=station_number,
@@ -133,4 +137,4 @@ class ExamStationService:
         elapse = (now - started_at).total_seconds()
         remaining = station.time_limit - int(elapse)
 
-        return remaining
+        return max(0, remaining)

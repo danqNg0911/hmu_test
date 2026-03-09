@@ -19,7 +19,7 @@ class PresentedFinding(BaseModel):
 
 class Station(Document):
     patient_info_id: Optional[PydanticObjectId] = None
-    name: str
+    name: Optional[str] = None
     type: str
     presented_findings: Optional[List[PresentedFinding]] = None
     questions: List[Question]

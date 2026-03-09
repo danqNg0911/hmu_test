@@ -8,7 +8,7 @@ import models as models
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env.dev", extra="ignore")
+    model_config = ConfigDict(env_file=".env", extra="ignore")
     
     DATABASE_URL: Optional[str] = None
 

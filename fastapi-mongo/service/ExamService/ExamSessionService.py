@@ -60,7 +60,7 @@ class ExamSessionService:
             
             return {
                 "id": str(session.id),
-                "status": session.status,
+                "session_status": session.status,
                 "current_station": session.current_station + 1,
                 "total_stations": len(session.stations)
             }
@@ -84,7 +84,7 @@ class ExamSessionService:
             current_station_id = session.stations[current_index]
             current_station = await db.retrieve_station(current_station_id)
 
-            current_exam_station = await self.ExamStationService.check_and_update_exam_station(session_id, current_index + 1)
+            current_exam_station = await self.ExamStationService.check_and_update_exam_station(session_id, current_index)
 
             if current_exam_station.status != "IN_PROGRESS":
                 return {
@@ -107,80 +107,96 @@ class ExamSessionService:
             logger.error(f"Error retrieving current station: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Server error")
 
-    async def submitCurrentStation(self, session_id: PydanticObjectId, station_id: str, answers: List[UserAnswerRequest]):
+    async def submitCurrentStation(self, session_id: PydanticObjectId, answers: List[UserAnswerRequest]):
         try:
+            #get và kiểm tra session
             session = await db.retrieve_exam_session(session_id)
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found")
-            
+    
             if session.status == "COMPLETED":
                 raise HTTPException(status_code=400, detail="Exam session already completed")
             
-            if session.current_station >= len(session.stations):
-                raise HTTPException(status_code=400, detail="Exam session already completed")
-            
-            #cập nhật trạng thái của station trong session đó sang submitted/time_out
-            await self.ExamStationService.submit_exam_station(session_id, session.current_station + 1)
-
-            station_id_obj = session.stations[session.current_station]
-            station = await db.retrieve_station(station_id_obj)
-            station_type = station.type
-
-            #xử lý logic nộp kết quả 
-            if station_type == "question_answer":
-                await self.StationResultService.handle_question_answer(session_id, station_id_obj, station_type, answers)
-
-            else:
-                await self.StationResultService.handle_patient_interview(session_id, station_id_obj, station_type)
-
-            
-            next_index = session.current_station + 1
+            current_index = session.current_station
             total = len(session.stations)
+            if current_index >= total:
+                raise HTTPException(status_code=400, detail="Exam session already completed")
 
-            #xử lý nộp trạm cuối -> nộp cả bài thi
-            if next_index >= total:
-                # cập nhật session hoàn thành
+            #get exam_station và check status để tránh update current_station nhiều lần 
+            existing = await db.retrieve_exam_station(session_id, session.current_station)
+            if not existing:
+                raise HTTPException(status_code=404,detail="Exam station not found")
+            elif existing.status == "SUBMITTED" or existing.status == "TIME_OUT":
+                station = await db.retrieve_station(session.stations[current_index])
+                return {
+                    "session_status": "IN_PROGRESS",
+                    "station_number": current_index + 1,
+                    "station":  station.model_dump(by_alias=True)
+                }
+            else:
+                station_id_obj = session.stations[current_index]
+                station = await db.retrieve_station(station_id_obj)
+                station_type = station.type
+
+                #xử lý logic nộp kết quả
+                if station.type == "question_answer":
+                    await self.StationResultService.handle_question_answer(session_id, station_id_obj, station_type, answers)
+
+                else:
+                    await self.StationResultService.handle_patient_interview(session_id, station_id_obj, station_type)
+
+                #cập nhật trạng thái của station trong session đó sang submitted/time_out
+                await self.ExamStationService.submit_exam_station(session_id, current_index)
+
+                next_index = current_index + 1
+                
+                #xử lý nộp trạm cuối -> nộp cả bài thi
+                if next_index >= total:
+                    # cập nhật session hoàn thành
+                    await db.update_exam_session_data(
+                        session_id,
+                        {"status": "COMPLETED"}
+                    )
+                    
+                    station_results = await db.get_all_station_results(session_id)
+                    total_score = sum(result.score or 0 for result in station_results)
+                    stations = await db.get_stations_by_session_ids([session_id])
+                    session_start_time = stations[0].started_at
+
+                    # lưu kết quả cả bài thi
+                    await db.create_exam_result(
+                        session_id=session_id,
+                        user_id=session.user_id,
+                        start_at=session_start_time,
+                        end_at=datetime.utcnow(),
+                        total_score=total_score,
+                        overall_feedback=None
+                    )
+                    
+                    return {
+                        "status": "COMPLETED",
+                        "message": "Exam completed successfully"
+                    }
+                
+                #cập nhật trạng thái của trạm tiếp theo sang IN_PROGRESS do sẽ gửi luôn nd trạm tiếp theo 
+                await self.ExamStationService.check_and_update_exam_station(session_id, next_index)
+
+                next_station_id = session.stations[next_index]
+                next_station = await db.retrieve_station(next_station_id)
+
+                #cập nhật stt của trạm hiện tại thêm 1
                 await db.update_exam_session_data(
                     session_id,
-                    {"status": "COMPLETED"}
+                    {
+                        "current_station": next_index
+                    }
                 )
-                
-                station_results = await db.get_all_station_results(session_id)
-                total_score = sum(result.score or 0 for result in station_results)
-                stations = await db.get_stations_by_session_ids([session_id])
-                session_start_time = stations[0].started_at
 
-                # lưu kết quả cả bài thi
-                await db.create_exam_result(
-                    session_id=session_id,
-                    user_id=session.user_id,
-                    start_at=session_start_time,
-                    end_at=datetime.utcnow(),
-                    total_score=total_score,
-                    overall_feedback=None
-                )
-                
                 return {
-                    "status": "COMPLETED",
-                    "message": "Exam completed successfully"
+                    "status": "IN_PROGRESS",
+                    "station_number": next_index + 1,
+                    "station":  next_station.model_dump(by_alias=True)
                 }
-            
-            next_station_id = session.stations[next_index]
-            next_station = await db.retrieve_station(next_station_id)
-
-            await db.update_exam_session_data(
-                session_id,
-                {
-                    "current_station": next_index
-                }
-            )
-
-            return {
-                "status": "IN_PROGRESS",
-                "station_number": next_index + 1,
-                "station":  next_station.model_dump(by_alias=True)
-            }
-        
         except HTTPException:
             raise
         except Exception as e:
@@ -195,6 +211,12 @@ class ExamSessionService:
             if not session:
                 raise HTTPException(404, "Session not found")
 
+            if session.status == "COMPLETED":
+                return {
+                    "status": "COMPLETED",
+                    "message": "Exam already completed"
+                }
+            
             await db.update_exam_session_data(
                 session.id,
                 {"status": "COMPLETED"}

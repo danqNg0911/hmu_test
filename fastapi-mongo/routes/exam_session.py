@@ -45,8 +45,7 @@ async def get_current_station(
 )
 async def submit_station(
     session_id: PydanticObjectId,
-    station_id: str,
     answers: Optional[List[UserAnswerRequest]] = None,
     service: ExamSessionService = Depends(ExamSessionService)
 ):
-    return await service.submitCurrentStation(session_id, station_id, answers)
+    return await service.submitCurrentStation(session_id, answers)

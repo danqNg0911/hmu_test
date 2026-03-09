@@ -10,7 +10,8 @@ class ExamResult(Document):
     end_at: datetime
     total_score: int
     overall_feedback: Optional[str] = None
-
+    stations_summary: Optional[dict] = None
+    
     class Settings:
         name = "Exam_results"
         
