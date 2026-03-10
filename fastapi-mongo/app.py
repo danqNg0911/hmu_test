@@ -26,9 +26,9 @@ async def read_root():
 
 
 app.include_router(UserRouter, tags=["User"], prefix="/user")
-app.include_router(StationRouter, tags=["Station"], prefix="/station")
+#app.include_router(StationRouter, tags=["Station"], prefix="/station")
 app.include_router(PatientInfoRouter, tags=["Patient Info"], prefix="/patient-info")
 app.include_router(ExamSessionRouter, tags=["Exam Session"], prefix="/session")
-app.include_router(MessageRouter, tags=["Message"], prefix="/message")
+#app.include_router(MessageRouter, tags=["Message"], prefix="/message")
 app.include_router(ResultRouter, tags=["Result"], prefix="/result")
 app.include_router(ExamWebSocketRouter, tags=["WebSocket Exam"], prefix="/ws/exam")

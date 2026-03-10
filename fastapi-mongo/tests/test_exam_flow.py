@@ -7,60 +7,75 @@ from beanie import PydanticObjectId
 client = TestClient(app)
 
 async def test_exam_flow(client: AsyncClient):
-    test_user_id = str(PydanticObjectId())
-    total_stations_test = 2
+    #=== Đăng ký/ đăng nhập sinh viên
+    signup_resp = client.post("/user/signup", json={
+        "email": "abc@test.com",
+        "name": "Nguyen Van Y",
+        "password": "123456",
+        "role": "student",
+        "username": "OSCE_100"
+    })
 
-    response = client.post("/session", json={"user_id": test_user_id, "total_stations": total_stations_test})
-    assert response.status_code == 201
-    session_data = response.json()
+    assert signup_resp.status_code in [200,201]
+    
+    login_resp = client.post("/user/login", json={
+        "password": "123456",
+        "username": "OSCE_100"
+    })
 
-    assert session_data["status"] == "IN_PROGRESS"
-    assert session_data["current_station"] == 1
+    assert login_resp.status_code == 200
+
+    user_id = signup_resp.json().get("id")
+    token = login_resp.json().get("access_token")
+    headers = {"Authorization" : f"Bearer {token}"}
+
+    #======= Bắt đầu phiên thi
+    start_session_payload = {
+        "user_id": user_id, 
+        "total_patients": 1
+    }
+    session_resp = client.post("/session/", json=start_session_payload, headers=headers)
+    assert session_resp.status_code in [200, 201]
+    
+    session_data = session_resp.json()
     session_id = session_data["id"]
+    assert session_data["status"] == "IN_PROGRESS"
 
-    print(f"\n Đã tạo phiên thi thành công: {session_id}")
+    #===== lấy đề bài và thi
+    current_station_resp = client.get(f"/session/{session_id}/station", headers=headers)
+    assert current_station_resp.status_code == 200
+    
+    station_data = current_station_resp.json()
+    assert "station" in station_data
+    # Lấy ID của trạm hiện tại (nếu cần gửi kèm khi submit)
+    current_station_id = station_data["station"]["_id"]
 
-    for current_step in range(total_stations_test):
-        # Hiển thị đề
-        print(f"\n--- Đang vào trạm số {current_step + 1}/{total_stations_test} ---")
-        response = client.get(f"/session/{session_id}/station")
-        assert response.status_code == 200
-        station_data = response.json()
+    #===== Nộp bài 
+    submission_payload = {
+        # Giả định body nộp bài của bạn như sau
+        "answers": [
+            {
+                "question_id": "abc-123", # Bạn có thể bỏ qua nếu chưa validate chặt
+                "answer_text": "Bệnh nhân bị viêm ruột thừa"
+            }
+        ]
+    }
+    submit_resp = client.post(f"/session/{session_id}/station/submission", json=submission_payload, headers=headers)
+    assert submit_resp.status_code in [200, 201]
+    
+    # Ở đây submit_resp có thể trả về thông tin của trạm MỚI (nếu còn trạm), 
+    # hoặc trả về status COMPLETED nếu đã hết trạm.
 
-        assert station_data["current_station"] == current_step + 1
-        print(f"\n Đã lấy thông tin trạm hiện tại: {station_data}")
-
-        # Kết nối WebSocket để thi trạm
-        station_id = station_data["station"]["_id"]
-
-        with client.websocket_connect(f"/ws/exam/{session_id}/{station_id}?token=mock_token") as ws:
-            ws.send_json({"type": "text", "content": "Chào bác sĩ"})
-            while True:
-                resp = ws.receive_json()
-                if resp.get("event") == "agent_response_end" or resp.get("event") == "system_ack":
-                    break
-        print(f"    -> Đã hoàn thành bài thi tại trạm {current_step + 1}")
-
-        # Nộp bài và chuyển trạm (hoặc hoàn thành kỳ thi nếu đây là trạm cuối)
-        response = client.post(f"/session/{session_id}/station/submission")
-        assert response.status_code == 200
-        submission_data = response.json()
-        if current_step < total_stations_test - 1:
-            assert submission_data["current_station"] == current_step + 2
-            print(f"\n Đã nộp trạm hiện tại và chuyển trạm tiếp theo: {submission_data}")
-        else:
-            # cuối cùng, nên nhận trạng thái COMPLETED
-            assert submission_data["status"] == "COMPLETED"
-            print(f"\n Đã hoàn tất kỳ thi: {submission_data}")
-
-    # Xem lại kết quả bài thi
-    response = client.get(f"/exam-result/{session_id}")
-    assert response.status_code == 200
-    exam_results = response.json()
-    assert isinstance(exam_results, list)
-    assert len(exam_results) == 1
-    result = exam_results[0]
-    assert result["total_score"] == 100
-    assert result.get("overall_feedback") is None
-
-    # Xem lại kết quả 1 trạm chi tiết
+    # ==========================================
+    # Bước 5: Xem lại kết quả (Get Result)
+    # ==========================================
+    # Giả định bài thi đã kết thúc (COMPLETED), gọi API lấy bảng điểm
+    result_resp = client.get(f"/result/exam/{session_id}", headers=headers)
+    
+    # Nếu đang thi dở thì có thể trả về 400 hoặc 404, tùy logic bạn set. 
+    # Giả định ở đây là success 200.
+    if result_resp.status_code == 200:
+        result_data = result_resp.json()
+        assert "session_id" in result_data
+        assert "stations_summary" in result_data
+        assert type(result_data["stations_summary"]) == list

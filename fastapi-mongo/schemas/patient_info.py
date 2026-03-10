@@ -12,6 +12,7 @@ class PatientInfoCreate(BaseModel):
     description: str
 
 class PatientInfoUpdate(BaseModel):
+    id: Optional[PydanticObjectId] = None
     version: Optional[str] = None
     name: Optional[str] = None
     age: Optional[int] = None
@@ -22,3 +23,18 @@ class PatientInfoUpdate(BaseModel):
 
 class PatientInfoResponse(PatientInfoCreate):
     id: PydanticObjectId
+
+class StationBrief(BaseModel):
+    station_id: str
+    station_name: str
+
+class PatientInfoDetailResponse(BaseModel):
+    id: Optional[PydanticObjectId] = None
+    version: Optional[str] = None
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    avt_url: Optional[str] = None
+    voice_id: Optional[str] = None
+    description: Optional[str] = None
+    stations_list: Optional[list[StationBrief]] = None

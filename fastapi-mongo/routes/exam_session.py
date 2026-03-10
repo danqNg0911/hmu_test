@@ -12,7 +12,7 @@ router = APIRouter()
 
 class StartExamRequest(BaseModel):
     user_id: str
-    total_station: int
+    total_patient: int
 
 @router.post(
     "/",
@@ -23,7 +23,7 @@ async def start_exam_session(
     payload: StartExamRequest,
     service: ExamSessionService = Depends(ExamSessionService)
 ):
-    return await service.startExamSession(payload.user_id, payload.total_station)
+    return await service.start_exam_session_with_patient(payload.user_id, payload.total_patient)
 
 
 @router.get(

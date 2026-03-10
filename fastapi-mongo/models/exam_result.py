@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class ExamResult(Document):
-    session_id: PydanticObjectId
+    session_id: Optional[PydanticObjectId] = None
     user_id: PydanticObjectId 
     start_at: datetime
     end_at: datetime

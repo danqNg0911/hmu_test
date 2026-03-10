@@ -1,10 +1,10 @@
-from ast import In
-from typing import List, Union, Optional
+from typing import Any, Dict, List, Union, Optional
 from beanie import PydanticObjectId
 from datetime import datetime
 
 from models.user import User
 from models.station import Station
+from schemas.station import StationUpdate
 from models.patient_info import PatientInfo
 from models.exam_session import ExamSession
 from models.exam_station import ExamStation
@@ -41,26 +41,92 @@ async def get_random_station(limit: int) -> List[dict]:
         {"$sample": {"size": limit}}
     ]).to_list()
 
+async def retrieve_stations_by_patient_info(patient_info_id: PydanticObjectId) -> List[Station]:
+    return await Station.find(Station.patient_info_id == patient_info_id).to_list()
 
+async def retrieve_stations_by_list_patient_info(patient_info_ids: List[PydanticObjectId]) -> List[Station]:
+    all_stations = await Station.find({
+        "patient_info_id": {"$in": patient_info_ids}
+    }).to_list()
+    stations_by_patient = {str(pid): [] for pid in patient_info_ids}
+    for station in all_stations:
+        stations_by_patient[str(station.patient_info_id)].append(station)
+    return stations_by_patient
 
+async def update_station(patient_id: PydanticObjectId, station_id: PydanticObjectId, update_data: StationUpdate) -> Optional[Station]:
+    station = await Station.get(station_id)
+    
+    if not station or station.patient_info_id != patient_id:
+        return None
+    
+    raw_dict = update_data.model_dump(exclude_unset=True)
+    clean_dict = {k: v for k, v in raw_dict.items() if v is not None}
+    if not clean_dict:
+        return station
+        
+    await station.update({"$set": clean_dict})
+    return await Station.get(station_id)
+
+async def delete_station(station_id: PydanticObjectId) -> bool:
+    station = await Station.get(station_id)
+
+    if not station:
+        return False
+
+    await station.delete()
+    return True
 # ================= PATIENT INFO =================
 
 async def add_patient_info(new_patient: PatientInfo) -> PatientInfo:
     return await new_patient.create()
 
 async def retrieve_patient_info(id: PydanticObjectId) -> Union[PatientInfo, None]:
-    return await PatientInfo.get(id)
-
-async def update_patient_info_data(id: PydanticObjectId, data: dict) -> Union[bool, PatientInfo]:
-    des_body = {k: v for k, v in data.items() if v is not None}
-    update_query = {"$set": des_body}
+    patient = await PatientInfo.get(id) 
+    if not patient:
+        return None
+        
+    stations = await Station.find({"patient_info_id": id}).to_list()
     
-    patient = await PatientInfo.get(id)
-    if patient:
-        await patient.update(update_query)
-        return patient
-    return False
+    stations_summary = []
+    for st in stations:
+        stations_summary.append({
+            "station_id": str(st.id), 
+            "station_name": st.name
+        })
+        
+    patient_dict = patient.model_dump(by_alias=True)
+    patient_dict["id"] = str(patient.id) 
+    patient_dict["stations_list"] = stations_summary 
+    
+    return patient_dict
 
+
+async def update_patient_info_data(patient_id: PydanticObjectId, update_data: Dict[str, Any]) -> Optional[PatientInfo]:
+    patient = await PatientInfo.get(patient_id)
+    if not patient:
+        return None
+    
+    raw_dict = update_data.model_dump(exclude_unset=True)
+    clean_dict = {k: v for k, v in raw_dict.items() if v is not None}
+    if not clean_dict:
+        return patient
+    
+    await patient.update({"$set": clean_dict})
+    return await PatientInfo.get(patient_id)
+
+async def get_random_patient_info(limit: int) -> Optional[PatientInfo]:
+    return await PatientInfo.aggregate([
+        {"$sample": {"size": limit}}
+    ]).to_list()
+
+async def delete_patient_info(id: PydanticObjectId) -> bool:
+    patient = await PatientInfo.get(id)
+
+    if not patient:
+        return False
+
+    await patient.delete()
+    return True
 
 # ================= EXAM SESSION =================
 
@@ -81,9 +147,9 @@ async def update_exam_session_data(id: PydanticObjectId, data: dict) -> Union[bo
     return False
 
 # ================= EXAM STATION =================
-async def create_exam_stations(stations: List[ExamStation]) -> int:
-    await ExamStation.insert_many(stations)
-    return len(stations)
+async def create_exam_stations(patients: List[PatientInfo]) -> int:
+    await ExamStation.insert_many(patients)
+    return len(patients)
 
 async def retrieve_exam_station(session_id: PydanticObjectId, station_number: int) -> Optional[ExamStation]:
     return await ExamStation.find_one(
@@ -132,7 +198,7 @@ async def add_exam_session(new_session: ExamSession) -> ExamSession:
 
 # ================= Station Result =================
 
-async def get_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId) -> Optional[StationResult]:
+async def retrieve_station_result(session_id: PydanticObjectId, station_id: PydanticObjectId) -> Optional[StationResult]:
 
     return await StationResult.find_one(
         StationResult.session_id == session_id,
@@ -143,7 +209,7 @@ async def get_all_station_results(session_id: PydanticObjectId) -> List[StationR
     return await StationResult.find(StationResult.session_id == session_id).to_list()
 
 async def append_user_answer(session_id: PydanticObjectId, station_id: PydanticObjectId, answer: UserAnswer) -> Optional[StationResult]:
-    station_result = await get_station_result(session_id, station_id)
+    station_result = await retrieve_station_result(session_id, station_id)
 
     if not station_result:
         return None
@@ -158,7 +224,7 @@ async def append_user_answer(session_id: PydanticObjectId, station_id: PydanticO
     return station_result
 
 async def update_station_result_evaluation(session_id: PydanticObjectId, station_id: PydanticObjectId, score: int, evaluation: str) -> Optional[StationResult]:
-    station_result = await get_station_result(session_id, station_id)
+    station_result = await retrieve_station_result(session_id, station_id)
 
     if not station_result:
         return None
@@ -247,22 +313,38 @@ async def retrieve_exam_result(session_id: PydanticObjectId) -> Optional[ExamRes
     
     station_results = await get_all_station_results(session_id)
     station_ids = [sr.station_id for sr in station_results]
-    stations_info = await Station.find(In(Station.id, station_ids)).to_list()
+    stations_info = await Station.find({"_id": {"$in": station_ids}}).to_list()
     station_map = {str(station.id): station for station in stations_info}
     station_summaries = []
     for sr in station_results:
         station_info = station_map.get(str(sr.station_id))
         if station_info:
             station_summaries.append({
-                "station_id": sr.station_id,
+                "station_id": str(sr.station_id),
                 "station_name": station_info.name,
                 "score": sr.score,
                 "evaluation": sr.evaluation
             })
-        return {
-            "session_id": exam_result.session_id,
-            "overall_score": exam_result.overall_score,
-            "max_overall_score": exam_result.total_score,
-            "overall_feedback": exam_result.overall_feedback,
-            "stations_summary": station_summaries
-        }
+    # return {
+    #     "session_id": exam_result.session_id,
+    #     "max_overall_score": exam_result.total_score,
+    #     "overall_feedback": exam_result.overall_feedback,
+    #     "stations_summary": station_summaries
+    # }
+    # for sr in station_results:
+    #     station_info = station_map.get(str(sr.station_id))
+    #     station_summaries[str(sr.station_id)] = {
+    #         "station_name": station_info.name if station_info else None,
+    #         "score": sr.score,
+    #         "evaluation": sr.evaluation,
+    #     }
+
+    return {
+        "session_id": str(exam_result.session_id),
+        "user_id": str(exam_result.user_id),
+        "start_at": exam_result.start_at,
+        "end_at": exam_result.end_at,
+        "total_score": exam_result.total_score,
+        "overall_feedback": exam_result.overall_feedback,
+        "stations_summary": station_summaries,
+    }

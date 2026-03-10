@@ -1,21 +1,17 @@
-"""Tests fixtures."""
-from beanie import init_beanie
 import pytest
+from beanie import init_beanie
 from asgi_lifespan import LifespanManager
-from httpx import AsyncClient
-
-from app import app
+from httpx import AsyncClient, ASGITransport
 from mongomock_motor import AsyncMongoMockClient
-from config.config import initiate_database
 
-import models as models
 from app import app, token_listener
-
+from config.config import initiate_database
+import models
 
 async def mock_database():
     client = AsyncMongoMockClient()
     await init_beanie(
-        database=client["database_name"],
+        database=client["test_database"],
         recreate_views=True,
         document_models=models.__all__,
     )
@@ -35,9 +31,8 @@ async def client_test(mocker):
     mocker.patch("config.config.initiate_database", return_value=await mock_database())
 
     async with LifespanManager(app):
-        async with AsyncClient(
-            app=app, base_url="http://test", follow_redirects=True
-        ) as ac:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
             yield ac
 
 

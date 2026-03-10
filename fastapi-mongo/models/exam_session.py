@@ -1,5 +1,5 @@
 from beanie import Document, PydanticObjectId
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 class ExamSession(Document):
@@ -7,6 +7,7 @@ class ExamSession(Document):
     stations: Optional[List[PydanticObjectId]] = None
     status: str
     current_station: Optional[int] = None
+    patients_snapshot: Dict[str, Any] = {}
 
     #expected_time: Optional[datetime] = None
 

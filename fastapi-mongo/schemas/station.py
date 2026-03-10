@@ -18,6 +18,7 @@ class PresentedFindingSchema(BaseModel):
     content: str
 
 class StationCreate(BaseModel):
+    patient_info_id: Optional[PydanticObjectId] = None
     name: str
     type: str
     presented_findings: Optional[List[PresentedFindingSchema]] = None
@@ -25,7 +26,9 @@ class StationCreate(BaseModel):
     time: int
 
 class StationUpdate(BaseModel):
+    id: Optional[PydanticObjectId] = None
     patient_info_id: Optional[PydanticObjectId] = None
+    name: Optional[str] = None
     type: Optional[str] = None
     presented_findings: Optional[List[PresentedFindingSchema]] = None
     questions: Optional[List[QuestionSchema]] = None

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any
 from beanie import PydanticObjectId
 
 class ExamSessionCreate(BaseModel):
@@ -8,6 +8,7 @@ class ExamSessionCreate(BaseModel):
     expected_time: Optional[str] = None
     status: str = "IN_PROGRESS"
     current_station: Optional[int] = 1
+    patients_snapshot: Optional[dict[str, Any]] = None
 
 class ExamSessionUpdate(BaseModel):
     status: Optional[str] = None
@@ -19,3 +20,5 @@ class ExamSessionResponse(ExamSessionCreate):
 class ExamSessionStartResponse(BaseModel):
     id: PydanticObjectId
     current_station: int
+
+    
